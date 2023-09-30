@@ -10,6 +10,8 @@ CVUIROSPublisher::CVUIROSPublisher() {
   pub_cmd_vel_ = nh.advertise<geometry_msgs::Twist>("/cmd_vel", 10);
   sub_robot_info_ = nh.subscribe("/robot_info", 100,
                       &CVUIROSPublisher::robot_info_callback, this);
+  sub_odom_data_ = nh.subscribe("/odom", 100,
+                      &CVUIROSPublisher::robot_odom_callback, this);
   timer = nh.createTimer(ros::Duration(5.0),  &CVUIROSPublisher::timerCallback, this);
   timer.start();
   
@@ -23,6 +25,10 @@ void CVUIROSPublisher::robot_info_callback(const robot_info::custom &msg) {
 // updating gui info var at a specific rate
 void CVUIROSPublisher::timerCallback(const ros::TimerEvent& event) {
   this->robot_info_msg = this->robot_info_msg_temp;
+}
+
+void CVUIROSPublisher::robot_odom_callback(const nav_msgs::Odometry::ConstPtr& msg){
+  this->odom_data = *msg;
 }
 
 void CVUIROSPublisher::run() {
@@ -76,8 +82,11 @@ void CVUIROSPublisher::run() {
 
     // odometry text bar
     cvui::window(frame, 40, 510, 90, 70, "X");
+    cvui::printf(frame, 70, 550, 1, 0x220000, "%.1f", odom_data.pose.pose.position.x);
     cvui::window(frame, 150, 510, 90, 70, "Y");
+    cvui::printf(frame, 180, 550, 1, 0x220000, "%.1f", odom_data.pose.pose.position.y);
     cvui::window(frame, 260, 510, 90, 70, "Z");
+    cvui::printf(frame, 290, 550, 1, 0x220000, "%.1f", odom_data.pose.pose.position.z);
 
     // Distance travelled
     cvui::printf(frame, 40, 590, 0.4, 0x820000, "Distance travelled");

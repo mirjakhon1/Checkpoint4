@@ -10,7 +10,7 @@
 #include <std_msgs/String.h>
 #include "robot_info/custom.h"
 #include "geometry_msgs/Twist.h"
-
+#include "nav_msgs/Odometry.h"
 
 class CVUIROSPublisher {
 public:
@@ -19,6 +19,7 @@ public:
   void run();
   void robot_info_callback(const robot_info::custom &msg);
   void timerCallback(const ros::TimerEvent& event);
+  void robot_odom_callback(const nav_msgs::Odometry::ConstPtr& msg);
   
 
 private:
@@ -32,6 +33,8 @@ private:
   const std::string WINDOW_NAME = "CVUI ROS BUTTON!";
   robot_info::custom robot_info_msg;
   robot_info::custom robot_info_msg_temp;
+  nav_msgs::Odometry odom_data;
 protected:
   geometry_msgs::Twist speed_msg;
+  
 };
