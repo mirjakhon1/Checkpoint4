@@ -2,6 +2,7 @@
 #include "robot_gui/robot_gui.h"
 #include "ros/rate.h"
 #include <iostream>
+#include "std_srvs/Trigger.h"
 
 CVUIROSPublisher::CVUIROSPublisher() {
   // Initialize ROS node
@@ -14,7 +15,8 @@ CVUIROSPublisher::CVUIROSPublisher() {
                       &CVUIROSPublisher::robot_odom_callback, this);
   timer = nh.createTimer(ros::Duration(5.0),  &CVUIROSPublisher::timerCallback, this);
   timer.start();
-  
+  distance_client = nh.serviceClient<std_srvs::Trigger>("/get_distance");
+  distance_travelled = "0";
 }
 
 // robot info topic subscriber callback, updating temp info var 
@@ -34,7 +36,6 @@ void CVUIROSPublisher::robot_odom_callback(const nav_msgs::Odometry::ConstPtr& m
 void CVUIROSPublisher::run() {
   cv::Mat frame = cv::Mat(800, 400, CV_8UC3); // 800 - y; 400 - x
   int count = 0;
-  ros::Rate speed_update_rate(1.0);
 
 
   // Init a OpenCV window and tell cvui to use it.
@@ -53,8 +54,7 @@ void CVUIROSPublisher::run() {
     if (cvui::button(frame, 150, 270, 90, 70, "Stop")) {
       speed_msg.linear.x = 0;
       speed_msg.linear.y = 0;
-      speed_msg.angular.x = 0;
-      speed_msg.angular.y = 0;
+      speed_msg.angular.z = 0;
     }
 
     if (cvui::button(frame, 40, 270, 90, 70, "Left")) {
@@ -88,16 +88,22 @@ void CVUIROSPublisher::run() {
     cvui::window(frame, 260, 510, 90, 70, "Z");
     cvui::printf(frame, 290, 550, 1, 0x220000, "%.1f", odom_data.pose.pose.position.z);
 
-    // Distance travelled
+    // Distance travelled calculate server call
     cvui::printf(frame, 40, 590, 0.4, 0x820000, "Distance travelled");
+    cvui::window(frame, 150, 610, 200, 70, "Distance in meters: ");
 
     if (cvui::button(frame, 40, 610, 90, 70, "Call")) {
-      std_msgs::String msg;
-      msg.data = "Button clicked " + std::to_string(count) + " times.";
-      pub_.publish(msg);
+      std_srvs::Trigger srv;
+      if(distance_client.call(srv)){
+        ROS_INFO("/get_distance service call is successful.");
+        distance_travelled = srv.response.message;
+      }else{
+        ROS_ERROR("/get_distance service call ERROR");
+      }
     }
+    cvui::printf(frame, 180, 650, 1, 0x220000, "%s", distance_travelled.c_str());
 
-    cvui::window(frame, 150, 610, 200, 70, "Distance in meters: ");
+    
 
     // Create window at (220, 20) with size 250x80 (width x height) and title
     cvui::window(frame, 40, 20, 300, 160, "Info");
@@ -121,6 +127,6 @@ void CVUIROSPublisher::run() {
       break;
     }
     ros::spinOnce();
-    speed_update_rate.sleep();
+    
   }
 }

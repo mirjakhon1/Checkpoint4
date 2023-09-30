@@ -117,6 +117,12 @@ target_link_libraries(robot_gui_node
   robot_gui
    ${catkin_LIBRARIES}
  )
+
+add_executable(distance_tracker_service_node src/distance_tracker_service_main.cpp)
+target_link_libraries(distance_tracker_service_node 
+  robot_gui
+   ${catkin_LIBRARIES}
+ )
 ###########
 ## Build ##
 ###########
@@ -131,6 +137,7 @@ include
 # Declare a C++ library
 add_library(${PROJECT_NAME}
   src/robot_gui_class.cpp
+  src/distance_tracker_service_class.cpp
 )
 
 ## Add cmake target dependencies of the library
